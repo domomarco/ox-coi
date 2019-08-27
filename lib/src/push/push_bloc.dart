@@ -83,6 +83,13 @@ class PushBloc extends Bloc<PushEvent, PushState> {
       } catch (error) {
         yield PushStateFailure(error: error.toString());
       }
+    } else if (event is DeletePush) {
+      yield PushStateLoading();
+      try {
+        deletePush();
+      } catch (error) {
+        yield PushStateFailure(error: error.toString());
+      }
     }
   }
 
@@ -121,6 +128,18 @@ class PushBloc extends Bloc<PushEvent, PushState> {
         .catchError((error) => print("[PushBloc.patchPush] error - ${error.toString()}"));
 
     print("[PushBloc.patchPush] response.body - ${response.body}");
+    //TODO: handle response
+  }
+
+  void deletePush() async{
+    IOClient ioClient = createIOClient();
+    String id = ""; //TODO: add id from registerPush() response
+
+    var response = await ioClient
+        .delete(_pushUrl + id.toString(), headers: _headers)
+        .catchError((error) => print("[PushBloc.deletePush] error - ${error.toString()}"));
+
+    print("[PushBloc.deletePush] response.body - ${response.body}");
     //TODO: handle response
   }
 

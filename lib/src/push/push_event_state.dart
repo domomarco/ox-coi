@@ -51,6 +51,8 @@ class GetPush extends PushEvent {}
 
 class PatchPush extends PushEvent {}
 
+class DeletePush extends PushEvent {}
+
 abstract class PushState extends ProgressState {
   PushState({progress}) : super(progress: progress);
 }
