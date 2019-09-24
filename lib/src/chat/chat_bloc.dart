@@ -123,6 +123,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Context context = Context();
     Chat chat = chatRepository.get(chatId);
     if (chat == null) {
+      print("[ChatBloc._setupChat] fhaar - add chat to repo");
       chatRepository.putIfAbsent(id: chatId);
       chat = chatRepository.get(chatId);
     }

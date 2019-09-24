@@ -97,6 +97,7 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
     } else if (event is InvitesPrepared) {
       setupChatList(true, event.messageIds);
     } else if (event is ChatListModified) {
+      print("[ChatListBloc.mapEventToState] fhaar - chatListItemWrapper ids length: ${event.chatListItemWrapper.ids.length}");
       yield ChatListStateSuccess(
         chatListItemWrapper: event.chatListItemWrapper,
       );
@@ -233,18 +234,21 @@ class ChatListBloc extends Bloc<ChatListEvent, ChatListState> {
       Map<int, dynamic> chatSummaries = Map();
       for (int i = 0; i < chatCount; i++) {
         int chatId = await chatList.getChat(i);
+        print("[ChatListBloc.setupChatList] fhaar - add chat ID: $chatId");
         chatIds.add(chatId);
         var summaryData = await chatList.getChatSummary(i);
         var chatSummary = ChatSummary.fromMethodChannel(summaryData);
         chatSummaries.putIfAbsent(chatId, () => chatSummary);
       }
       await chatList.tearDown();
+      print("[ChatListBloc.setupChatList] fhaar - chatid count after teardown: ${chatIds.length}");
       _chatRepository.putIfAbsent(ids: chatIds);
       chatSummaries.forEach((id, chatSummary) {
         _chatRepository.get(id).set(ChatExtension.chatSummary, chatSummary);
       });
     }
     if (isNullOrEmpty(_currentSearch)) {
+      print("[ChatListBloc.setupChatList] fhaar - chatrepo size: ${_chatRepository.length()}");
       ids = _chatRepository.getAllIds();
       lastUpdateValues = _chatRepository.getAllLastUpdateValues();
     } else {
