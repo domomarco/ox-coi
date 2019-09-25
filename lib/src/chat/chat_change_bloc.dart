@@ -94,6 +94,8 @@ class ChatChangeBloc extends Bloc<ChatChangeEvent, ChatChangeState> {
       _setProfileImage(event.chatId, event.newPath);
     } else if (event is SetNameCompleted) {
       yield ChangeNameSuccess();
+    } else if (event is ParticipantsChanged){
+      yield ChangeParticipantsSuccess();
     }
   }
 
@@ -161,11 +163,13 @@ class ChatChangeBloc extends Bloc<ChatChangeEvent, ChatChangeState> {
     for (int i = 0; i < contactIds.length; i++) {
       await context.addContactToChat(chatId, contactIds[i]);
     }
+    dispatch(ParticipantsChanged());
   }
 
   void _removeParticipant(int chatId, int contactId) async {
     Context context = Context();
     await context.removeContactFromChat(chatId, contactId);
+    dispatch(ParticipantsChanged());
   }
 
   void _setName(int chatId, String newName) async {

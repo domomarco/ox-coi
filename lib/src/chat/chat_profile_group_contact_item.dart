@@ -42,6 +42,7 @@
 
 import 'package:delta_chat_core/delta_chat_core.dart' as Core;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ox_coi/src/chat/chat.dart';
 import 'package:ox_coi/src/contact/contact_details.dart';
 import 'package:ox_coi/src/contact/contact_item_bloc.dart';
@@ -50,10 +51,13 @@ import 'package:ox_coi/src/contact/contact_item_event_state.dart';
 import 'package:ox_coi/src/data/contact_repository.dart';
 import 'package:ox_coi/src/navigation/navigatable.dart';
 import 'package:ox_coi/src/navigation/navigation.dart';
+import 'package:rxdart/rxdart.dart';
 
+import 'chat_bloc.dart';
 import 'chat_change_bloc.dart';
 import 'chat_change_event_state.dart';
 import 'chat_create_mixin.dart';
+import 'chat_event_state.dart';
 
 enum GroupParticipantActions { info, sendMessage, remove }
 
@@ -71,6 +75,7 @@ class ChatProfileGroupContactItem extends StatefulWidget {
 class _ChatProfileGroupContactItemState extends State<ChatProfileGroupContactItem> with ContactItemBuilder, ChatCreateMixin {
   ContactItemBloc _contactBloc = ContactItemBloc();
   ChatChangeBloc _chatChangeBloc = ChatChangeBloc();
+  ChatBloc chatBloc;
   Navigation _navigation = Navigation();
   List<GroupPopupMenu> choices;
 
@@ -96,6 +101,12 @@ class _ChatProfileGroupContactItemState extends State<ChatProfileGroupContactIte
     } else {
       choices = meChoices;
     }
+    final chatChangeObservable = new Observable<ChatChangeState>(_chatChangeBloc.state);
+    chatChangeObservable.listen((state) {
+      if (state is ChangeParticipantsSuccess) {
+        chatBloc.dispatch(RequestChat(chatId: widget.chatId));
+      }
+    });
   }
 
   @override
@@ -106,6 +117,7 @@ class _ChatProfileGroupContactItemState extends State<ChatProfileGroupContactIte
 
   @override
   Widget build(BuildContext context) {
+    chatBloc = BlocProvider.of<ChatBloc>(context);
     return getAvatarItemBlocBuilder(bloc: _contactBloc, onContactTapped: goToProfile, moreButton: getMoreButton());
   }
 

@@ -128,6 +128,8 @@ class SetImagePath extends ChatChangeEvent {
   SetImagePath({@required this.chatId, @required this.newPath});
 }
 
+class ParticipantsChanged extends ChatChangeEvent{}
+
 class SetNameCompleted extends ChatChangeEvent {}
 
 abstract class ChatChangeState {}
@@ -149,3 +151,5 @@ class CreateChatStateFailure extends ChatChangeState {
 }
 
 class ChangeNameSuccess extends ChatChangeState {}
+
+class ChangeParticipantsSuccess extends ChatChangeState {}

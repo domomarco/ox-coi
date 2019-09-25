@@ -221,8 +221,8 @@ class _ChatState extends State<Chat> with ChatComposer, ChatCreateMixin, InviteM
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-        appBar: new AppBar(
+    return Scaffold(
+        appBar: AppBar(
           title: buildTitle(),
           actions: <Widget>[
             IconButton(
@@ -232,13 +232,13 @@ class _ChatState extends State<Chat> with ChatComposer, ChatCreateMixin, InviteM
             ),
           ],
         ),
-        body: new Column(children: <Widget>[
-          new Flexible(child: buildListView()),
+        body: Column(children: <Widget>[
+          Flexible(child: buildListView()),
           if (isInviteChat(widget.chatId)) buildInviteChoice(),
           if (_filePath.isNotEmpty) buildPreview(),
           Divider(height: dividerHeight),
-          new Container(
-            decoration: new BoxDecoration(color: Theme.of(context).cardColor),
+          Container(
+            decoration: BoxDecoration(color: Theme.of(context).cardColor),
             child: _buildTextComposer(),
           ),
         ]));
@@ -361,6 +361,7 @@ class _ChatState extends State<Chat> with ChatComposer, ChatCreateMixin, InviteM
           subTitle = state.subTitle;
           color = state.color;
           isVerified = state.isVerified;
+          print("[_ChatState.buildTitle] fhaar - PATH: ${state.avatarPath}");
           imagePath = state.avatarPath;
         } else {
           name = "";
@@ -696,7 +697,7 @@ class _ChatState extends State<Chat> with ChatComposer, ChatCreateMixin, InviteM
   }
 
   _chatTitleTapped() async {
-    await navigation.push(
+    navigation.push(
       context,
       MaterialPageRoute(builder: (context) {
         return BlocProvider.value(
@@ -706,7 +707,7 @@ class _ChatState extends State<Chat> with ChatComposer, ChatCreateMixin, InviteM
       }),
     );
 
-    _chatBloc.dispatch(RequestChat(chatId: widget.chatId, messageId: widget.messageId));
+    //_chatBloc.dispatch(RequestChat(chatId: widget.chatId, messageId: widget.messageId));
   }
 
   void onPhonePressed() {

@@ -151,8 +151,9 @@ class _ChatProfileGroupState extends State<ChatProfileGroup> {
                   )),
               Divider(),
               InkWell(
-                onTap: () => _navigation.push(
+                onTap: () => {_navigation.push(
                     context, MaterialPageRoute(builder: (context) => ChatAddGroupParticipants(chatId: widget.chatId, contactIds: state.contactIds))),
+                chatBloc.dispatch(RequestChat(chatId: widget.chatId))},
                 child: Container(
                   padding: const EdgeInsets.only(left: 16.0, bottom: 12.0),
                   child: Row(
