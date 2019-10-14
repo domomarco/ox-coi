@@ -40,75 +40,45 @@
  * for more details.
  */
 
-import 'package:background_fetch/background_fetch.dart';
+import 'package:bloc/bloc.dart';
 import 'package:delta_chat_core/delta_chat_core.dart';
-import 'package:logging/logging.dart';
-import 'package:ox_coi/src/notifications/local_push_manager.dart';
-import 'package:ox_coi/src/utils/constants.dart';
+import 'package:ox_coi/src/error/error_event_state.dart';
+import 'package:ox_coi/src/utils/toast.dart';
+import 'package:rxdart/rxdart.dart';
 
-void backgroundHeadlessTask() async {
-  var core = DeltaChatCore();
-  var init = await core.init(dbName);
-  if (init) {
-    await getMessages();
-    await core.stop();
-  }
-  BackgroundFetch.finish();
-}
+class ErrorBloc extends Bloc<ErrorEvent, ErrorState> {
+  PublishSubject<Event> _errorSubject = new PublishSubject();
+  var _core = DeltaChatCore();
+  var _errorListenerId;
 
-Future<void> getMessages() async {
-  var context = Context();
-  await context.interruptIdleForIncomingMessages();
-  var localPushManager = LocalPushManager();
-  await localPushManager.setup();
-  await localPushManager.triggerLocalPush();
-}
+  @override
+  ErrorState get initialState => ErrorStateInitial();
 
-class BackgroundManager {
-  final Logger _logger = Logger("background_manager");
-
-  static BackgroundManager _instance;
-
-  bool _running = false;
-
-  factory BackgroundManager() => _instance ??= BackgroundManager._internal();
-
-  BackgroundManager._internal();
-
-  setupAndStart() {
-    BackgroundFetch.registerHeadlessTask(backgroundHeadlessTask);
-    BackgroundFetch.configure(
-        BackgroundFetchConfig(
-          minimumFetchInterval: 15,
-          stopOnTerminate: false,
-          enableHeadless: true,
-          startOnBoot: true,
-        ),
-        _callback);
-    _running = true;
-    _logger.info("Configured and started background fetch");
-  }
-
-  Future<void> _callback() async {
-    await getMessages();
-    BackgroundFetch.finish();
-  }
-
-  void start() async {
-    if (_running) {
-      return;
+  @override
+  Stream<ErrorState> mapEventToState(ErrorEvent event) async* {
+    if (event is SetupListeners) {
+      try {
+        yield* setupListeners();
+      } catch (error) {
+        yield ErrorStateFailure();
+      }
     }
-    await BackgroundFetch.start();
-    _logger.info("Started background fetch");
-    _running = true;
   }
 
-  void stop() {
-    if (!_running) {
-      return;
-    }
-    BackgroundFetch.stop();
-    _logger.info("Stopped background fetch");
-    _running = false;
+  @override
+  void dispose() {
+    _core.removeListener(Event.error, _errorListenerId);
+    _errorListenerId = null;
+    super.dispose();
+  }
+
+  Stream<ErrorState> setupListeners() async* {
+    _errorSubject.listen(_errorCallback);
+    _errorListenerId = await _core.listen(Event.error, _errorSubject);
+    yield ErrorStateSetupDone();
+  }
+
+  void _errorCallback(Event event) {
+    showToast("${event.data2}");
   }
 }

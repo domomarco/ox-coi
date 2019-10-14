@@ -56,7 +56,7 @@ class QrBloc extends Bloc<QrEvent, QrState> {
   DeltaChatCore _core = DeltaChatCore();
   int _qrInviterListenerId;
   int _qrJoinerListenerId;
-  int _errorSubjectListenerId;
+  int _errorListenerId;
 
   PublishSubject<Event> _qrSubject = new PublishSubject();
 
@@ -130,17 +130,17 @@ class QrBloc extends Bloc<QrEvent, QrState> {
       _qrSubject.listen(_successCallback, onError: _errorCallback);
       _qrInviterListenerId = await _core.listen(Event.secureJoinInviterProgress, _qrSubject);
       _qrJoinerListenerId = await _core.listen(Event.secureJoinJoinerProgress, _qrSubject);
-      _errorSubjectListenerId = await _core.listen(Event.error, _errorSubject);
+      _errorListenerId = await _core.listen(Event.error, _errorSubject);
     }
   }
 
   void _unregisterListeners() {
     _core.removeListener(Event.secureJoinInviterProgress, _qrInviterListenerId);
     _core.removeListener(Event.secureJoinJoinerProgress, _qrJoinerListenerId);
-    _core.removeListener(Event.error, _errorSubjectListenerId);
+    _core.removeListener(Event.error, _errorListenerId);
     _qrInviterListenerId = null;
     _qrJoinerListenerId = null;
-    _errorSubjectListenerId = null;
+    _errorListenerId = null;
   }
 
   void getQrText(int chatId) async {

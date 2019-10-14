@@ -78,7 +78,6 @@ class PushBloc extends Bloc<PushEvent, PushState> {
   var _context = Context();
   int _metadataListenerId;
   int _webPushSubscriptionListenerId;
-  int _errorListenerId;
   static const _subscribeListenerId = 1001;
   static const _validateListenerId = 1002;
 
@@ -278,22 +277,18 @@ class PushBloc extends Bloc<PushEvent, PushState> {
       pushSubject.listen(_metadataSuccessCallback, onError: _errorCallback);
       _metadataListenerId = await _core.listen(Event.setMetaDataDone, pushSubject);
       _webPushSubscriptionListenerId = await _core.listen(Event.webPushSubscription, pushSubject);
-      _errorListenerId = await _core.listen(Event.error, pushSubject);
     }
   }
 
   void _unregisterListeners() {
     _core.removeListener(Event.setMetaDataDone, _metadataListenerId);
     _core.removeListener(Event.webPushSubscription, _webPushSubscriptionListenerId);
-    _core.removeListener(Event.error, _errorListenerId);
     _metadataListenerId = null;
     _webPushSubscriptionListenerId = null;
-    _errorListenerId = null;
   }
 
   void _metadataSuccessCallback(Event event) {
     var data1 = event.data1;
-    _logger.info("Received event ${event.eventId} with payload 1: $data1 and payload 2: ${event.data2}");
     if (data1 == _subscribeListenerId) {
       _setNotificationPushStatus(PushSetupState.metadataSubscribed);
     } else if (data1 == _validateListenerId) {

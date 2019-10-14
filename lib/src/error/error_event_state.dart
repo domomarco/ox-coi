@@ -40,27 +40,14 @@
  * for more details.
  */
 
-import 'package:flutter/widgets.dart';
+abstract class ErrorEvent {}
 
-abstract class BackgroundEvent {}
+class SetupListeners extends ErrorEvent {}
 
-class BackgroundListenerSetup extends BackgroundEvent {}
+abstract class ErrorState {}
 
-class BackgroundStateChange extends BackgroundEvent {
-  final String state;
+class ErrorStateInitial extends ErrorState {}
 
-  BackgroundStateChange({@required this.state});
-}
+class ErrorStateSetupDone extends ErrorState {}
 
-abstract class BackgroundState {}
-
-class BackgroundStateInitial extends BackgroundState {}
-
-class BackgroundStateFailure extends BackgroundState {}
-
-class BackgroundStateSuccess extends BackgroundState {
-  final String state;
-
-  BackgroundStateSuccess({@required this.state});
-}
-
+class ErrorStateFailure extends ErrorState {}

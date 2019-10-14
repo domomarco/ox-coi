@@ -43,8 +43,8 @@
 import 'package:delta_chat_core/delta_chat_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:ox_coi/src/background/background_bloc.dart';
-import 'package:ox_coi/src/background/background_event_state.dart';
+import 'package:ox_coi/src/lifecycle/lifecycle_bloc.dart';
+import 'package:ox_coi/src/lifecycle/lifecycle_event_state.dart';
 import 'package:ox_coi/src/chatlist/chat_list_bloc.dart';
 import 'package:ox_coi/src/chatlist/chat_list_event_state.dart';
 import 'package:ox_coi/src/chatlist/chat_list_item.dart';
@@ -162,9 +162,9 @@ class _ChatListState extends State<ChatList> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<BackgroundBloc, BackgroundState>(
+    return BlocListener<LifecycleBloc, LifecycleState>(
       listener: (context, state) {
-        if (state is BackgroundStateSuccess) {
+        if (state is LifecycleStateSuccess) {
           if (state.state == AppLifecycleState.resumed.toString()) {
             shareBloc.dispatch(LoadSharedData());
           }

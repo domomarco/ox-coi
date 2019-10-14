@@ -40,59 +40,41 @@
  * for more details.
  */
 
+import 'dart:async';
+import 'dart:ui';
+
 import 'package:bloc/bloc.dart';
-import 'package:delta_chat_core/delta_chat_core.dart';
-import 'package:ox_coi/src/background_refresh/background_refresh_manager.dart';
-import 'package:ox_coi/src/platform/preferences.dart';
-import 'settings_notifications_event_state.dart';
+import 'package:flutter/services.dart';
 
-class SettingsNotificationsBloc extends Bloc<SettingsNotificationsEvent, SettingsNotificationsState> {
-  @override
-  SettingsNotificationsState get initialState => SettingsNotificationsStateInitial();
+import 'lifecycle_event_state.dart';
+
+class LifecycleBloc extends Bloc<LifecycleEvent, LifecycleState> {
+  String _currentBackgroundState;
+
+  String get currentBackgroundState => _currentBackgroundState;
 
   @override
-  Stream<SettingsNotificationsState> mapEventToState(SettingsNotificationsEvent event) async* {
-    if (event is RequestSetting) {
+  LifecycleState get initialState => LifecycleStateInitial();
+
+  @override
+  Stream<LifecycleState> mapEventToState(LifecycleEvent event) async* {
+    if (event is ListenerSetup) {
       try {
-        loadSettings();
+        setup();
       } catch (error) {
-        yield SettingsNotificationsStateFailure();
+        yield LifecycleStateFailure();
       }
-    } else if (event is SettingLoaded) {
-      yield SettingsNotificationsStateSuccess(pullActive: event.pullActive);
-    } else if (event is ActionSuccess) {
-      yield SettingsNotificationsStateSuccess(pullActive: event.pullActive);
-    } else if (event is ChangeSetting) {
-      changeSettings();
+    } else if (event is StateChange) {
+      _currentBackgroundState = event.state;
+      yield LifecycleStateSuccess(state: _currentBackgroundState);
     }
   }
 
-  void loadSettings() async {
-    bool pullPreference = await getPreference(preferenceNotificationsPull);
-    if (pullPreference == null) {
-      bool defaultPullPreference = !(await isCoiSupported());
-      await setPreference(preferenceNotificationsPull, defaultPullPreference);
-      pullPreference = defaultPullPreference;
-    }
-    dispatch(SettingLoaded(pullActive: pullPreference));
-  }
-
-  void changeSettings() async {
-    bool pullPreference = await getPreference(preferenceNotificationsPull);
-    bool newPullPreference = pullPreference == null ? true : !pullPreference;
-    await setPreference(preferenceNotificationsPull, newPullPreference);
-    var lifecycleManager = BackgroundRefreshManager();
-    if (newPullPreference) {
-      lifecycleManager.start();
-    } else {
-      lifecycleManager.stop();
-    }
-    dispatch(ActionSuccess(pullActive: newPullPreference));
-  }
-
-  Future<bool> isCoiSupported() async {
-    var context = Context();
-    var isCoiSupported = (await context.isCoiSupported()) == 1;
-    return isCoiSupported;
+  void setup() {
+    SystemChannels.lifecycle.setMessageHandler((state) async {
+      dispatch(StateChange(state: state));
+      return state;
+    });
+    dispatch(StateChange(state: AppLifecycleState.resumed.toString()));
   }
 }

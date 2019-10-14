@@ -44,13 +44,17 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:delta_chat_core/delta_chat_core.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:logging/logging.dart';
-import 'package:ox_coi/src/background/background_manager.dart';
+import 'package:ox_coi/src/background_refresh/background_refresh_manager.dart';
 import 'package:ox_coi/src/contact/contact_list_bloc.dart';
 import 'package:ox_coi/src/contact/contact_list_event_state.dart';
 import 'package:ox_coi/src/data/config.dart';
 import 'package:ox_coi/src/data/contact_extension.dart';
 import 'package:ox_coi/src/data/contact_repository.dart';
+import 'package:ox_coi/src/error/error_bloc.dart';
+import 'package:ox_coi/src/error/error_event_state.dart';
 import 'package:ox_coi/src/main/main_event_state.dart';
 import 'package:ox_coi/src/notifications/local_push_manager.dart';
 import 'package:ox_coi/src/notifications/notification_manager.dart';
@@ -77,6 +81,7 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     if (event is PrepareApp) {
       yield MainStateLoading();
       try {
+        var buildContext = event.context;
         await _initCore();
         await _openExtensionDatabase();
         String appState = await getPreference(preferenceAppState);
@@ -84,7 +89,8 @@ class MainBloc extends Bloc<MainEvent, MainState> {
           await _setupDatabaseExtensions();
           await _setupDefaultValues();
         }
-        await _setupManagers(event);
+        await _setupBlocs(buildContext);
+        await _setupManagers(buildContext);
         _checkLogin();
       } catch (error) {
         yield MainStateFailure(error: error.toString());
@@ -97,17 +103,22 @@ class MainBloc extends Bloc<MainEvent, MainState> {
     }
   }
 
-  Future<void> _setupManagers(PrepareApp event) async {
-    _notificationManager.setup(event.context);
-    _pushManager.setup(event.context);
+  Future<void> _setupBlocs(BuildContext context) async {
+    var errorBloc = BlocProvider.of<ErrorBloc>(context);
+    errorBloc.dispatch(SetupListeners());
+  }
+
+  Future<void> _setupManagers(BuildContext context) async {
+    _notificationManager.setup(context);
+    _pushManager.setup(context);
     _localPushManager.setup();
   }
 
   Future<void> setupBackgroundManager(bool coiSupported) async {
     bool pullPreference = await getPreference(preferenceNotificationsPull);
     if ((pullPreference == null && !coiSupported) || (pullPreference != null && pullPreference)) {
-      var backgroundManager = BackgroundManager();
-      backgroundManager.setupAndStart();
+      var lifecycleManager = BackgroundRefreshManager();
+      lifecycleManager.setupAndStart();
     }
   }
 
